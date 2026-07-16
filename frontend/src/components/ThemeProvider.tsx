@@ -18,10 +18,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Đọc theme từ localStorage hoặc tùy chọn hệ thống
     const savedTheme = localStorage.getItem("theme") as Theme;
     const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    
+
     const initialTheme = savedTheme || systemTheme;
     setTheme(initialTheme);
-    
+
     if (initialTheme === "dark") {
       document.documentElement.classList.add("dark");
     } else {
@@ -33,7 +33,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const nextTheme = theme === "light" ? "dark" : "light";
     setTheme(nextTheme);
     localStorage.setItem("theme", nextTheme);
-    
+
     if (nextTheme === "dark") {
       document.documentElement.classList.add("dark");
     } else {
