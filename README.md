@@ -112,33 +112,33 @@ Sau khi đã khởi chạy tất cả các dịch vụ, hãy kiểm tra hoạt �
 
 Dưới đây là danh sách toàn bộ các đường dẫn trang giao diện (routes) đã được xây dựng hoàn thiện trên Frontend của dự án CineGo:
 
-http://localhost:3000/ | Trang chủ (Landing Page)
-http://localhost:3000/movies | Danh sách phim & Tìm kiếm
-http://localhost:3000/movies/[movieId] | Chi tiết phim & Lịch chiếu
-http://localhost:3000/showtimes | Lịch chiếu phim tổng quan
-http://localhost:3000/cinemas | Danh sách chi nhánh rạp
-http://localhost:3000/cinemas/[cinemaId] | Chi tiết rạp & Lịch chiếu tại rạp
-http://localhost:3000/login | Đăng nhập tài khoản
-http://localhost:3000/register | Đăng ký tài khoản
-http://localhost:3000/forgot-password | Quên mật khẩu
-http://localhost:3000/reset-password | Đặt lại mật khẩu
-http://localhost:3000/unauthorized | Báo lỗi phân quyền
-http://localhost:3000/booking/[showtimeId] | Đặt vé xem phim (Chọn ghế & Thanh toán)
-http://localhost:3000/account/bookings | Lịch sử đặt vé khách hàng
-http://localhost:3000/account/bookings/[bookingId] | Chi tiết vé điện tử (QR Code check-in)
-http://localhost:3000/account/profile | Hồ sơ cá nhân & Đổi mật khẩu
-http://localhost:3000/staff | Dashboard nhân viên ca trực
-http://localhost:3000/staff/check-in | Quét mã soát vé & Check-in QR
-http://localhost:3000/admin | Dashboard quản trị viên
-http://localhost:3000/admin/reports | Thống kê báo cáo doanh số
-http://localhost:3000/admin/movies | Quản lý Phim (CRUD)
-http://localhost:3000/admin/genres | Quản lý Thể loại (CRUD)
-http://localhost:3000/admin/cinemas | Quản lý Rạp chiếu (CRUD)
-http://localhost:3000/admin/auditoriums | Quản lý Phòng chiếu (CRUD)
-http://localhost:3000/admin/seats | Thiết lập sơ đồ phòng chiếu (Seat setup)
-http://localhost:3000/admin/showtimes | Quản lý Suất chiếu (CRUD)
-http://localhost:3000/admin/bookings | Quản lý Đơn đặt vé (CRUD)
-http://localhost:3000/admin/users | Quản lý Người dùng (CRUD)
+- http://localhost:3000/ | Trang chủ (Landing Page)
+- http://localhost:3000/movies | Danh sách phim & Tìm kiếm
+- http://localhost:3000/movies/[movieId] | Chi tiết phim & Lịch chiếu
+- http://localhost:3000/showtimes | Lịch chiếu phim tổng quan
+- http://localhost:3000/cinemas | Danh sách chi nhánh rạp
+- http://localhost:3000/cinemas/[cinemaId] | Chi tiết rạp & Lịch chiếu tại rạp
+- http://localhost:3000/login | Đăng nhập tài khoản
+- http://localhost:3000/register | Đăng ký tài khoản
+- http://localhost:3000/forgot-password | Quên mật khẩu
+- http://localhost:3000/reset-password | Đặt lại mật khẩu
+- http://localhost:3000/unauthorized | Báo lỗi phân quyền
+- http://localhost:3000/booking/[showtimeId] | Đặt vé xem phim (Chọn ghế & Thanh toán)
+- http://localhost:3000/account/bookings | Lịch sử đặt vé khách hàng
+- http://localhost:3000/account/bookings/[bookingId] | Chi tiết vé điện tử (QR Code check-in)
+- http://localhost:3000/account/profile | Hồ sơ cá nhân & Đổi mật khẩu
+- http://localhost:3000/staff | Dashboard nhân viên ca trực
+- http://localhost:3000/staff/check-in | Quét mã soát vé & Check-in QR
+- http://localhost:3000/admin | Dashboard quản trị viên
+- http://localhost:3000/admin/reports | Thống kê báo cáo doanh số
+- http://localhost:3000/admin/movies | Quản lý Phim (CRUD)
+- http://localhost:3000/admin/genres | Quản lý Thể loại (CRUD)
+- http://localhost:3000/admin/cinemas | Quản lý Rạp chiếu (CRUD)
+- http://localhost:3000/admin/auditoriums | Quản lý Phòng chiếu (CRUD)
+- http://localhost:3000/admin/seats | Thiết lập sơ đồ phòng chiếu (Seat setup)
+- http://localhost:3000/admin/showtimes | Quản lý Suất chiếu (CRUD)
+- http://localhost:3000/admin/bookings | Quản lý Đơn đặt vé (CRUD)
+- http://localhost:3000/admin/users | Quản lý Người dùng (CRUD)
 
 ---
 
