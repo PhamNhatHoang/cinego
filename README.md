@@ -58,50 +58,57 @@ CineGo/
 
 ## 4. Hướng dẫn Chạy Dự án
 
-### Cài đặt và chạy Backend (Spring Boot)
-1. **Yêu cầu hệ thống**: Đã cài đặt JDK 17 và Maven.
-2. **Cấu hình Cơ sở dữ liệu**:
-   - Tạo database trong MySQL:
-     ```sql
-     CREATE DATABASE cinego CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-     ```
-   - Tạo file cấu hình cá nhân `backend/src/main/resources/application-dev.yml` (hoặc cấu hình trực tiếp biến môi trường) để điền tài khoản database của bạn. Tham khảo file mẫu `application.yml`.
-3. **Chạy ứng dụng**:
-   - Di chuyển vào thư mục `backend/`.
-   - Chạy lệnh biên dịch và tải thư viện:
-     ```bash
-     mvn clean compile
-     ```
-   - Chạy ứng dụng:
+### Bước 1: Khởi động MySQL thông qua Docker (Khuyên dùng)
+Dự án được cấu hình sẵn Docker để khởi chạy nhanh cơ sở dữ liệu mà không cần cài đặt MySQL local:
+1. Đảm bảo phần mềm **Docker Desktop** đã được mở trên máy tính.
+2. Mở Terminal tại thư mục gốc của dự án (`CineGo/`) và chạy lệnh:
+   ```bash
+   docker compose up -d
+   ```
+   *Lệnh này sẽ tự động tải MySQL 8.0, tạo database `cinego` và thiết lập tài khoản `root` với mật khẩu là `root`.*
+
+*(Nếu bạn muốn chạy MySQL cài đặt trực tiếp trên hệ điều hành, hãy khởi động dịch vụ MySQL của bạn, tạo database `cinego` và thay đổi mật khẩu kết nối phù hợp tại file `backend/src/main/resources/application-dev.yml`).*
+
+### Bước 2: Chạy Backend (Spring Boot)
+1. **Chạy qua IDE (Khuyên dùng)**:
+   - Mở thư mục `backend/` bằng **IntelliJ IDEA** hoặc **Eclipse**.
+   - Bấm **Reload Maven Project** để IDE tải hết thư viện.
+   - Tìm file `com.cinego.backend.BackendApplication.java`, click chuột phải và chọn **Run**.
+2. **Chạy qua dòng lệnh (CLI)**:
+   - Mở Terminal tại thư mục `backend/` và chạy lệnh:
      ```bash
      mvn spring-boot:run
      ```
-   - Backend sẽ chạy tại cổng mặc định `8080`. API check trạng thái: `http://localhost:8080/api/v1/health`.
-   - Swagger UI tài liệu API: `http://localhost:8080/swagger-ui/index.html`.
+   - Khi chạy thành công, Tomcat sẽ hoạt động tại cổng `8080` (context-path: `/api/v1`).
 
-### Cài đặt và chạy Frontend (Next.js)
-1. **Yêu cầu hệ thống**: Đã cài đặt Node.js (v18.x hoặc mới hơn).
-2. **Cài đặt thư viện**:
-   - Di chuyển vào thư mục `frontend/`.
-   - Chạy lệnh:
-     ```bash
-     npm install
-     ```
-3. **Cấu hình biến môi trường**:
-   - Tạo file `frontend/.env.local` ở thư mục frontend:
-     ```env
-     NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
-     ```
-4. **Chạy ứng dụng chế độ phát triển**:
-   - Chạy lệnh:
-     ```bash
-     npm run dev
-     ```
-   - Frontend sẽ chạy tại `http://localhost:3000`.
+### Bước 3: Chạy Frontend (Next.js)
+1. Mở Terminal tại thư mục `frontend/`.
+2. Cài đặt các thư viện phụ thuộc (nếu là lần đầu tiên chạy):
+   ```bash
+   npm install
+   ```
+3. Khởi chạy server phát triển (Development Server):
+   ```bash
+   npm run dev
+   ```
+4. Frontend Next.js sẽ hoạt động tại địa chỉ: **`http://localhost:3000`**.
 
 ---
 
-## 5. Quy tắc Git của Nhóm
+## 5. Kiểm tra Kết nối & Hoạt động của Dự án
+
+Sau khi đã khởi chạy tất cả các dịch vụ, hãy kiểm tra hoạt động bằng các địa chỉ sau:
+
+| Dịch vụ | Đường dẫn kiểm tra | Kết quả mong đợi |
+| :--- | :--- | :--- |
+| **Frontend Giao diện** | [http://localhost:3000](http://localhost:3000) | Hiển thị trang chủ CineGo hỗ trợ toggle theme Sáng/Tối và sơ đồ định tuyến. |
+| **Backend Health Check** | [http://localhost:8080/api/v1/health](http://localhost:8080/api/v1/health) | Trả về JSON chứa thông tin status `"UP"` và phiên bản Java. |
+| **Tài liệu API Swagger** | [http://localhost:8080/api/v1/swagger-ui/index.html](http://localhost:8080/api/v1/swagger-ui/index.html) | Hiển thị giao diện Swagger UI chứa danh sách các endpoints của dự án. |
+| **Cơ sở dữ liệu (Docker)** | MySQL localhost:3306 | Kết nối thành công bằng user `root`, password `root`, database `cinego`. |
+
+---
+
+## 6. Quy tắc Git của Nhóm
 
 ### Nhánh Git (Git Branches)
 - `main`: Nhánh chạy production ổn định. Không được push code trực tiếp lên đây.
@@ -131,5 +138,5 @@ Ví dụ:
 
 ---
 
-## 6. Trạng thái Phát triển
+## 7. Trạng thái Phát triển
 - **Giai đoạn Hiện tại**: Khởi tạo phần thô (sườn dự án), định hình cấu trúc monorepo, tài liệu đặc tả, và các trang layout cơ bản.
