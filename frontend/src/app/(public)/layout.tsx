@@ -12,7 +12,7 @@ export default function PublicLayout({
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-background text-foreground transition-colors duration-300">
+    <div className="dark min-h-screen flex flex-col justify-between bg-background text-foreground transition-colors duration-300">
       
       {/* Client Header */}
       <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background/80 border-b border-border">
