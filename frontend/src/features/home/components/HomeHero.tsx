@@ -26,7 +26,7 @@ export default function HomeHero({ movie }: HomeHeroProps) {
           className="w-full h-full object-cover object-center opacity-45 scale-105"
         />
         {/* Left Dark Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent z-10 hidden md:block w-3/4" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent z-10 hidden md:block w-3/4" />
         {/* Bottom Dark Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent z-10" />
         {/* Universal Dark Overlay */}
