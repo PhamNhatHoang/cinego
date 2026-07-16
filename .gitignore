@@ -1,0 +1,66 @@
+# === OS / System Files ===
+.DS_Store
+Thumbs.db
+db.properties
+*.log
+*.tmp
+*.bak
+
+# === IDEs / Editors ===
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+.factorypath
+bin/
+
+# === Backend (Java/Maven) ===
+backend/target/
+backend/*.jar
+backend/*.war
+backend/*.zip
+backend/*.tar.gz
+backend/db/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/.apt_generated/
+backend/.apt_generated_tests/
+
+# === Frontend (Node/Next.js) ===
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.docusaurus/
+frontend/dist/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/.pnpm-debug.log*
+frontend/lerna-debug.log*
+
+# === Local Environment Configurations ===
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-prod.yml
+
+# === Docker ===
+.docker/
+docker-compose.override.yml
