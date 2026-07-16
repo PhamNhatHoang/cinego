@@ -79,14 +79,14 @@ export default function FeaturedShowtimes() {
           return (
             <div 
               key={movie.id}
-              className="flex flex-col md:flex-row gap-6 p-6 rounded-2xl border border-border bg-card shadow-soft"
+              className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6 rounded-2xl border border-border bg-card shadow-soft"
             >
               {/* Left Column: Movie Poster & Title */}
-              <div className="flex gap-4 md:w-80 w-full shrink-0 items-start" style={{ minWidth: "320px" }}>
+              <div className="md:col-span-4 flex gap-4 items-start">
                 <img 
                   src={movie.posterUrl} 
                   alt={movie.title}
-                  className="w-16 h-24 object-cover rounded-lg border border-border/40"
+                  className="w-16 h-24 object-cover rounded-lg border border-border/40 shrink-0"
                 />
                 <div className="space-y-1">
                   <span className="px-2 py-0.5 rounded text-[8px] font-bold bg-muted text-muted-foreground border border-border/60 uppercase">
@@ -100,7 +100,7 @@ export default function FeaturedShowtimes() {
               </div>
 
               {/* Right Column: Time Slots */}
-              <div className="flex-1 flex flex-wrap gap-3 items-center">
+              <div className="md:col-span-8 flex flex-wrap gap-3 items-center">
                 {slots.map((slot, index) => (
                   <button
                     key={index}
