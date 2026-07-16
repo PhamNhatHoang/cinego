@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Outfit, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-const outfit = Outfit({
-  subsets: ["latin"],
+const outfit = Plus_Jakarta_Sans({
+  subsets: ["vietnamese"],
   variable: "--font-outfit",
   weight: ["300", "400", "500", "600", "700", "800"],
 });
