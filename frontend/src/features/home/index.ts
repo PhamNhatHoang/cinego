@@ -1,5 +1,5 @@
 export * from "./types/home.types";
-export * from "./data/home-mock-data";
+export * from "@/mocks/home-mock-data";
 export { default as HomeHero } from "./components/HomeHero";
 export { default as QuickBooking } from "./components/QuickBooking";
 export { default as NowShowingSection } from "./components/NowShowingSection";

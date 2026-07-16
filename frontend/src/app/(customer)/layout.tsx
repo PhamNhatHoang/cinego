@@ -68,7 +68,7 @@ export default function CustomerLayout({
         <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground gap-4">
           <div className="flex items-center gap-2">
             <Popcorn size={16} className="text-primary" />
-            <p>© 2026 CineGo Project. Đồ án kết thúc khóa học.</p>
+            <p>© 2026 CineGo. Toàn bộ bản quyền được bảo lưu.</p>
           </div>
           <div className="flex gap-6 font-mono">
             <Link href="/account/profile" className="hover:underline">Hồ sơ</Link>

@@ -1,180 +1,24 @@
 "use client";
 
-import Link from "next/link";
-import { useTheme } from "@/components/ThemeProvider";
-import { Sun, Moon, Popcorn, MagnifyingGlass, Phone, Envelope, MapPin, FacebookLogo, InstagramLogo, YoutubeLogo, TwitterLogo } from "@phosphor-icons/react";
+import PublicHeader from "@/components/layouts/public/PublicHeader";
+import PublicFooter from "@/components/layouts/public/PublicFooter";
 
 export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { theme, toggleTheme } = useTheme();
-
   return (
     <div className="min-h-screen flex flex-col justify-between bg-background text-foreground transition-colors duration-300">
-
-      {/* Client Header */}
-      <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background/80 border-b border-border">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12 h-16 flex justify-between items-center gap-4">
-
-          {/* Left: Brand Logo & Navigation */}
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                <span className="text-white font-bold text-lg tracking-tighter">C</span>
-              </div>
-              <span className="text-xl font-bold tracking-tighter uppercase font-sans">
-                Cine<span className="text-primary">Go</span>
-              </span>
-            </Link>
-
-            <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              <Link href="/" className="hover:text-primary transition-colors">Trang chủ</Link>
-              <Link href="/movies" className="hover:text-primary transition-colors">Phim đang chiếu</Link>
-              <Link href="/movies" className="hover:text-primary transition-colors">Phim sắp chiếu</Link>
-              <Link href="/showtimes" className="hover:text-primary transition-colors">Lịch chiếu</Link>
-            </nav>
-          </div>
-
-          {/* Right: Search, Auth & Theme Toggle */}
-          <div className="flex items-center gap-4">
-
-            {/* Search Input Mockup */}
-            <div className="relative hidden md:block w-48 xl:w-64">
-              <input
-                type="text"
-                placeholder="Tìm phim..."
-                className="w-full bg-muted/40 border border-border hover:border-primary/30 focus:border-primary px-3 py-1.5 pl-9 rounded-full text-xs outline-none transition-colors"
-              />
-              <MagnifyingGlass size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            </div>
-
-            <Link
-              href="/login"
-              className="text-xs font-bold px-4 py-2 rounded-full border border-border bg-card hover:bg-muted transition-all cursor-pointer shrink-0"
-            >
-              Đăng nhập
-            </Link>
-
-            <button
-              onClick={toggleTheme}
-              className="w-9 h-9 rounded-full border border-border bg-card flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 shrink-0"
-              aria-label="Toggle Theme"
-            >
-              {theme === "light" ? (
-                <Moon size={16} weight="light" className="text-foreground" />
-              ) : (
-                <Sun size={16} weight="light" className="text-foreground" />
-              )}
-            </button>
-          </div>
-        </div>
-      </header>
-
+      <PublicHeader />
+      
       {/* Main Page Content */}
-      <div className="flex-1 w-full">
+      <main className="flex-1 w-full">
         {children}
-      </div>
+      </main>
 
-      {/* Client Footer */}
-      <footer className="border-t border-border/60 py-12 bg-card/15 text-xs">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12 space-y-10">
-
-          {/* Top Section: 4 Balanced Columns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-
-            {/* Column 1: Brand & Contact Info */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-md shadow-primary/20">
-                  <span className="text-white font-bold text-base tracking-tighter">C</span>
-                </div>
-                <span className="text-xl font-bold tracking-tighter uppercase font-sans">
-                  Cine<span className="text-primary">Go</span>
-                </span>
-              </div>
-              <p className="text-muted-foreground leading-relaxed text-xs">
-                Hệ thống đặt vé xem phim trực tuyến hiện đại, mang lại trải nghiệm điện ảnh chân thực và sống động chuẩn quốc tế.
-              </p>
-              <div className="space-y-2 pt-1 text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Phone size={14} className="text-primary" />
-                  <span className="font-mono font-bold text-foreground">1900 6006</span>
-                  <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">24/7</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Envelope size={14} className="text-primary" />
-                  <span>cskh@cinego.vn</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Column 2: CineGo Links */}
-            <div className="space-y-4">
-              <h4 className="font-bold uppercase tracking-wider text-foreground text-[10px]">CineGo</h4>
-              <div className="flex flex-col gap-2.5 text-muted-foreground font-medium">
-                <Link href="/movies" className="hover:text-primary transition-colors">Phim đang chiếu</Link>
-                <Link href="/movies" className="hover:text-primary transition-colors">Phim sắp chiếu</Link>
-                <Link href="/showtimes" className="hover:text-primary transition-colors">Lịch chiếu rạp</Link>
-                <Link href="/" className="hover:text-primary transition-colors">Khuyến mãi & Tin tức</Link>
-              </div>
-            </div>
-
-            {/* Column 3: Support & Policies */}
-            <div className="space-y-4">
-              <h4 className="font-bold uppercase tracking-wider text-foreground text-[10px]">Hỗ trợ & Chính sách</h4>
-              <div className="flex flex-col gap-2.5 text-muted-foreground font-medium">
-                <Link href="/" className="hover:text-primary transition-colors">Điều khoản sử dụng</Link>
-                <Link href="/" className="hover:text-primary transition-colors">Chính sách bảo mật</Link>
-                <Link href="/" className="hover:text-primary transition-colors">Chính sách thanh toán</Link>
-                <Link href="/" className="hover:text-primary transition-colors">Chăm sóc khách hàng</Link>
-              </div>
-            </div>
-
-            {/* Column 4: Business Details */}
-            <div className="space-y-4">
-              <h4 className="font-bold uppercase tracking-wider text-foreground text-[10px]">Thông tin doanh nghiệp</h4>
-              <div className="space-y-2 text-muted-foreground text-[11px] leading-relaxed">
-                <p className="font-bold text-foreground/95">CÔNG TY CỔ PHẦN GIẢI TRÍ CINEGO VIỆT NAM</p>
-                <p>Mã số doanh nghiệp: 0102345678 do Sở KH&ĐT TP. Hồ Chí Minh cấp lần đầu ngày 16/07/2026</p>
-                <div className="flex items-start gap-1.5 mt-1">
-                  <MapPin size={14} className="text-primary shrink-0 mt-0.5" />
-                  <span>Tầng 5, Tòa nhà Bitexco Financial Tower, Số 2 Hải Triều, Q. 1, TP. Hồ Chí Minh</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Bottom Section: Copyright & Social Media Icons */}
-          <div className="border-t border-border/60 pt-6 flex flex-col sm:flex-row justify-between items-center text-muted-foreground gap-4">
-            <div className="flex items-center gap-2">
-              <Popcorn size={16} className="text-primary shrink-0" />
-              <p>© 2026 CineGo Entertainment. Toàn bộ bản quyền được bảo lưu.</p>
-            </div>
-
-            {/* Social Media Links (Repositioned to bottom-right) */}
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] uppercase font-bold tracking-wider opacity-60 hidden md:inline">Kết nối:</span>
-              <div className="flex items-center gap-2">
-                <a href="#" className="w-8 h-8 rounded-full border border-border bg-card/50 hover:bg-primary hover:text-white flex items-center justify-center transition-all cursor-pointer" aria-label="Facebook">
-                  <FacebookLogo size={15} />
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full border border-border bg-card/50 hover:bg-primary hover:text-white flex items-center justify-center transition-all cursor-pointer" aria-label="Instagram">
-                  <InstagramLogo size={15} />
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full border border-border bg-card/50 hover:bg-primary hover:text-white flex items-center justify-center transition-all cursor-pointer" aria-label="Youtube">
-                  <YoutubeLogo size={15} />
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full border border-border bg-card/50 hover:bg-primary hover:text-white flex items-center justify-center transition-all cursor-pointer" aria-label="Twitter">
-                  <TwitterLogo size={15} />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
+

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MOCK_MOVIES, MOCK_SHOWTIMES } from "../data/home-mock-data";
+import { MOCK_MOVIES, MOCK_SHOWTIMES } from "@/mocks/home-mock-data";
 import { Calendar, Clock, ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
 

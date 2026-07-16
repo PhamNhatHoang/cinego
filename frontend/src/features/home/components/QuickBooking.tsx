@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Movie, Cinema, Showtime } from "../types/home.types";
-import { MOCK_MOVIES, MOCK_CINEMAS, MOCK_SHOWTIMES } from "../data/home-mock-data";
+import { MOCK_MOVIES, MOCK_CINEMAS, MOCK_SHOWTIMES } from "@/mocks/home-mock-data";
 import { MagnifyingGlass, Calendar, Compass, FilmSlate, Ticket } from "@phosphor-icons/react";
 
 export default function QuickBooking() {

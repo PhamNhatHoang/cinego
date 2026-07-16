@@ -1,4 +1,4 @@
-import { Movie, Cinema, Showtime } from "../types/home.types";
+import { Movie, Cinema, Showtime } from "@/features/home/types/home.types";
 
 export const MOCK_MOVIES: Movie[] = [
   {
