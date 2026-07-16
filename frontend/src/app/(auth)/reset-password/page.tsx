@@ -7,22 +7,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input, FormField, Button, ConfirmDialog } from "@/components/ui";
-import { Envelope, Lock, User, Warning } from "@phosphor-icons/react";
+import { Lock, Warning } from "@phosphor-icons/react";
 
-// Define validation schema using Zod
-const registerSchema = z
+// Define validation schema
+const resetPasswordSchema = z
   .object({
-    fullName: z
-      .string()
-      .min(2, { message: "Họ và tên phải chứa ít nhất 2 ký tự." })
-      .max(50, { message: "Họ và tên không được vượt quá 50 ký tự." }),
-    email: z
-      .string()
-      .min(1, { message: "Vui lòng nhập email." })
-      .email({ message: "Địa chỉ email không hợp lệ." }),
     password: z
       .string()
-      .min(8, { message: "Mật khẩu phải chứa ít nhất 8 ký tự." })
+      .min(8, { message: "Mật khẩu mới phải chứa ít nhất 8 ký tự." })
       .regex(/[A-Z]/, { message: "Mật khẩu phải chứa ít nhất 1 chữ hoa." })
       .regex(/[a-z]/, { message: "Mật khẩu phải chứa ít nhất 1 chữ thường." })
       .regex(/[0-9]/, { message: "Mật khẩu phải chứa ít nhất 1 chữ số." }),
@@ -33,9 +25,9 @@ const registerSchema = z
     path: ["confirmPassword"],
   });
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type ResetFormValues = z.infer<typeof resetPasswordSchema>;
 
-export default function RegisterPage() {
+export default function ResetPasswordPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -45,31 +37,23 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<ResetFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      fullName: "",
-      email: "",
       password: "",
       confirmPassword: "",
     },
   });
 
-  const onSubmit = async (data: RegisterFormValues) => {
+  const onSubmit = async (data: ResetFormValues) => {
     setIsLoading(true);
     setErrorMsg(null);
 
-    // Simulate network delay
+    // Simulate delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Simple mock logic - email already exists check
-    if (data.email.toLowerCase().trim() === "admin@cinego.com") {
-      setErrorMsg("Email này đã được đăng ký trong hệ thống.");
-      setIsLoading(false);
-    } else {
-      setIsLoading(false);
-      setShowSuccessDialog(true);
-    }
+    setIsLoading(false);
+    setShowSuccessDialog(true);
   };
 
   const handleSuccessConfirm = () => {
@@ -80,10 +64,10 @@ export default function RegisterPage() {
     <div className="space-y-6">
       <div className="text-center space-y-1">
         <h2 className="text-2xl font-bold tracking-tight text-foreground">
-          Tạo tài khoản
+          Đặt lại mật khẩu
         </h2>
         <p className="text-xs text-muted-foreground">
-          Đăng ký thành viên CineGo mới để trải nghiệm đặt vé nhanh chóng
+          Nhập mật khẩu mới bảo mật cao cho tài khoản của bạn
         </p>
       </div>
 
@@ -95,29 +79,8 @@ export default function RegisterPage() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Full Name Field */}
-        <FormField label="Họ và tên" error={errors.fullName?.message} required>
-          <Input
-            placeholder="Nguyễn Văn A"
-            error={!!errors.fullName}
-            leftIcon={<User size={18} />}
-            {...register("fullName")}
-          />
-        </FormField>
-
-        {/* Email Field */}
-        <FormField label="Email" error={errors.email?.message} required>
-          <Input
-            type="email"
-            placeholder="name@example.com"
-            error={!!errors.email}
-            leftIcon={<Envelope size={18} />}
-            {...register("email")}
-          />
-        </FormField>
-
         {/* Password Field */}
-        <FormField label="Mật khẩu" error={errors.password?.message} required>
+        <FormField label="Mật khẩu mới" error={errors.password?.message} required>
           <Input
             type="password"
             placeholder="Tối thiểu 8 ký tự (hoa, thường, số)"
@@ -129,47 +92,46 @@ export default function RegisterPage() {
 
         {/* Confirm Password Field */}
         <FormField
-          label="Xác nhận mật khẩu"
+          label="Xác nhận mật khẩu mới"
           error={errors.confirmPassword?.message}
           required
         >
           <Input
             type="password"
-            placeholder="Nhập lại mật khẩu"
+            placeholder="Nhập lại mật khẩu mới"
             error={!!errors.confirmPassword}
             leftIcon={<Lock size={18} />}
             {...register("confirmPassword")}
           />
         </FormField>
 
-        {/* Submit Button */}
+        {/* Submit button */}
         <Button
           type="submit"
           variant="primary"
           className="w-full py-2.5 font-bold"
           isLoading={isLoading}
         >
-          Đăng ký
+          Lưu mật khẩu mới
         </Button>
       </form>
 
       <div className="text-center text-xs text-muted-foreground">
-        <span>Đã có tài khoản? </span>
         <Link
           href="/login"
           className="text-primary hover:underline font-bold transition-all"
         >
-          Đăng nhập
+          Quay lại Đăng nhập
         </Link>
       </div>
 
-      {/* Success Confirmation Modal */}
+      {/* Success Modal */}
       <ConfirmDialog
         isOpen={showSuccessDialog}
         onClose={() => setShowSuccessDialog(false)}
         onConfirm={handleSuccessConfirm}
-        title="Đăng ký thành công!"
-        message="Chúc mừng! Bạn đã đăng ký tài khoản thành viên CineGo thành công. Hệ thống sẽ chuyển hướng bạn về trang Đăng nhập."
+        title="Đặt lại thành công!"
+        message="Mật khẩu mới của bạn đã được cập nhật thành công. Vui lòng sử dụng mật khẩu mới để đăng nhập."
         confirmText="Đăng nhập ngay"
         cancelText="Đóng"
       />
