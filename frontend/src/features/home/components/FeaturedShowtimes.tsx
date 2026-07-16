@@ -82,7 +82,7 @@ export default function FeaturedShowtimes() {
               className="flex flex-col md:flex-row gap-6 p-6 rounded-2xl border border-border bg-card shadow-soft"
             >
               {/* Left Column: Movie Poster & Title */}
-              <div className="flex gap-4 md:w-[350px] shrink-0 items-start">
+              <div className="flex gap-4 md:w-80 w-full shrink-0 items-start" style={{ minWidth: "320px" }}>
                 <img 
                   src={movie.posterUrl} 
                   alt={movie.title}
