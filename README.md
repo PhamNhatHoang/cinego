@@ -67,18 +67,23 @@ Dự án được cấu hình sẵn Docker để khởi chạy nhanh cơ sở d�
    ```
    *Lệnh này sẽ tự động tải MySQL 8.0, tạo database `cinego` và thiết lập tài khoản `root` với mật khẩu là `root`.*
 
-*(Nếu bạn muốn chạy MySQL cài đặt trực tiếp trên hệ điều hành, hãy khởi động dịch vụ MySQL của bạn, tạo database `cinego` và thay đổi mật khẩu kết nối phù hợp tại file `backend/src/main/resources/application-dev.yml`).*
+*(Nếu bạn muốn chạy MySQL cài đặt trực tiếp trên hệ điều hành, hãy khởi động dịch vụ MySQL của bạn, tạo database `cinego` và thay đổi mật khẩu kết nối phù hợp tại file `backend/src/main/resources/application.properties`).*
 
 ### Bước 2: Chạy Backend (Spring Boot)
 1. **Chạy qua IDE (Khuyên dùng)**:
-   - Mở thư mục `backend/` bằng **IntelliJ IDEA** hoặc **Eclipse**.
+   - Mở thư mục `backend/` bằng **IntelliJ IDEA** hoặc **VS Code**.
    - Bấm **Reload Maven Project** để IDE tải hết thư viện.
-   - Tìm file `com.cinego.backend.BackendApplication.java`, click chuột phải và chọn **Run**.
-2. **Chạy qua dòng lệnh (CLI)**:
+   - Tìm file `com.cinego.backend.Application.java`, click chuột phải và chọn **Run**.
+2. **Chạy qua dòng lệnh (CLI - Maven Wrapper)**:
    - Mở Terminal tại thư mục `backend/` và chạy lệnh:
-     ```bash
-     mvn spring-boot:run
-     ```
+     - Trên **Windows**:
+       ```bash
+       .\mvnw.cmd spring-boot:run
+       ```
+     - Trên **Linux/macOS**:
+       ```bash
+       ./mvnw spring-boot:run
+       ```
    - Khi chạy thành công, Tomcat sẽ hoạt động tại cổng `8080` (context-path: `/api/v1`).
 
 ### Bước 3: Chạy Frontend (Next.js)
@@ -103,7 +108,7 @@ Sau khi đã khởi chạy tất cả các dịch vụ, hãy kiểm tra hoạt �
 | :--- | :--- | :--- |
 | **Frontend Giao diện** | [http://localhost:3000](http://localhost:3000) | Hiển thị trang chủ CineGo hỗ trợ toggle theme Sáng/Tối và sơ đồ định tuyến. |
 | **Backend Health Check** | [http://localhost:8080/api/v1/health](http://localhost:8080/api/v1/health) | Trả về JSON chứa thông tin status `"UP"` và phiên bản Java. |
-| **Tài liệu API Swagger** | [http://localhost:8080/api/v1/swagger-ui/index.html](http://localhost:8080/api/v1/swagger-ui/index.html) | Hiển thị giao diện Swagger UI chứa danh sách các endpoints của dự án. |
+| **Tài liệu API Swagger** | [http://localhost:8080/api/v1/swagger-ui.html](http://localhost:8080/api/v1/swagger-ui.html) | Hiển thị giao diện Swagger UI chứa danh sách các endpoints của dự án. |
 | **Cơ sở dữ liệu (Docker)** | MySQL localhost:3306 | Kết nối thành công bằng user `root`, password `root`, database `cinego`. |
 
 ---
