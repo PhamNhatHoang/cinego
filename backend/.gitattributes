@@ -1,0 +1,21 @@
+# Handle line endings automatically for files detected as text
+# and leave all files detected as binary untouched.
+* text=auto eol=lf
+
+# Force batch scripts to always use CRLF line endings so that
+# they can be executed on Windows.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Force bash scripts to always use LF line endings so that
+# they can be executed on Linux/macOS.
+*.sh text eol=lf
+mvnw text eol=lf
+
+# Java sources
+*.java text diff=java
+*.properties text
+*.xml text
+*.yml text
+*.yaml text
+*.md text

@@ -9,6 +9,7 @@ db.properties
 # === IDEs / Editors ===
 .idea/
 .vscode/
+*.iml
 *.suo
 *.ntvs*
 *.njsproj
@@ -28,9 +29,6 @@ backend/*.war
 backend/*.zip
 backend/*.tar.gz
 backend/db/
-backend/.mvn/
-backend/mvnw
-backend/mvnw.cmd
 backend/.apt_generated/
 backend/.apt_generated_tests/
 

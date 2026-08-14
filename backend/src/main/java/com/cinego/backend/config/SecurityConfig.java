@@ -8,29 +8,37 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+// TODO [MEMBER-1]: Import JWT filter, AuthenticationProvider, PasswordEncoder
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    // TODO [MEMBER-1]: Inject JwtAuthenticationFilter
+    // TODO [MEMBER-1]: Configure PasswordEncoder bean (BCryptPasswordEncoder)
+    // TODO [MEMBER-1]: Configure AuthenticationManager bean
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Tắt CSRF vì đây là stateless REST API
             .csrf(AbstractHttpConfigurer::disable)
-            // Cấu hình phân quyền endpoint
             .authorizeHttpRequests(auth -> auth
-                // Cho phép truy cập công khai vào Health check API
                 .requestMatchers("/health").permitAll()
-                // Cho phép truy cập công khai tài liệu API Swagger
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                // Tạm thời cho phép tất cả các request khác để test sườn dự án (Thành viên 1 sẽ cấu hình JWT ở bước sau)
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
+                // TODO [MEMBER-1]: Configure role-based authorization:
+                //   .requestMatchers("/auth/**").permitAll()
+                //   .requestMatchers("/admin/**").hasRole("ADMIN")
+                //   .requestMatchers("/staff/**").hasAnyRole("STAFF", "ADMIN")
+                //   .anyRequest().authenticated()
                 .anyRequest().permitAll()
             )
-            // Thiết lập session là Stateless
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             );
+            // TODO [MEMBER-1]: Add JWT filter before UsernamePasswordAuthenticationFilter
+            // http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 }
+
