@@ -13,9 +13,11 @@ public class Genre {
     @Column(nullable = false, unique = true, length = 50)
     private String name;
 
-    // TODO [MEMBER-1]: Add relationship to Movie (ManyToMany, mappedBy from Movie side)
-
     public Genre() {
+    }
+
+    public Genre(String name) {
+        this.name = name;
     }
 
     public Long getId() {

@@ -14,10 +14,21 @@ public class BookingSeat {
     @Column(nullable = false)
     private BigDecimal price;
 
-    // TODO [MEMBER-2]: Add ManyToOne relationship to Booking
-    // TODO [MEMBER-2]: Add ManyToOne relationship to Seat
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id", nullable = false)
+    private Booking booking;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seat_id", nullable = false)
+    private Seat seat;
 
     public BookingSeat() {
+    }
+
+    public BookingSeat(BigDecimal price, Booking booking, Seat seat) {
+        this.price = price;
+        this.booking = booking;
+        this.seat = seat;
     }
 
     public Long getId() {
@@ -34,5 +45,21 @@ public class BookingSeat {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public Booking getBooking() {
+        return booking;
+    }
+
+    public void setBooking(Booking booking) {
+        this.booking = booking;
+    }
+
+    public Seat getSeat() {
+        return seat;
+    }
+
+    public void setSeat(Seat seat) {
+        this.seat = seat;
     }
 }

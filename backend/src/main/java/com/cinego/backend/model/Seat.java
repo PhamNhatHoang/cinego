@@ -1,10 +1,16 @@
 package com.cinego.backend.model;
 
 import com.cinego.backend.model.enums.SeatType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "seats")
+@Table(
+    name = "seats",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uq_auditorium_row_seat", columnNames = {"auditorium_id", "row_name", "seat_number"})
+    }
+)
 public class Seat {
 
     @Id
@@ -19,12 +25,20 @@ public class Seat {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private SeatType type;
+    private SeatType type = SeatType.STANDARD;
 
-    // TODO [MEMBER-2]: Add ManyToOne relationship to Auditorium
-    // TODO [SHARED]: Add unique constraint (auditorium_id, row_name, seat_number)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "auditorium_id", nullable = false)
+    private Auditorium auditorium;
 
     public Seat() {
+    }
+
+    public Seat(String rowName, Integer seatNumber, SeatType type, Auditorium auditorium) {
+        this.rowName = rowName;
+        this.seatNumber = seatNumber;
+        this.type = type;
+        this.auditorium = auditorium;
     }
 
     public Long getId() {
@@ -57,5 +71,13 @@ public class Seat {
 
     public void setType(SeatType type) {
         this.type = type;
+    }
+
+    public Auditorium getAuditorium() {
+        return auditorium;
+    }
+
+    public void setAuditorium(Auditorium auditorium) {
+        this.auditorium = auditorium;
     }
 }

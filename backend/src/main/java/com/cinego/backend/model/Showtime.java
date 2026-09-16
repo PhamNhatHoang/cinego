@@ -21,11 +21,27 @@ public class Showtime {
     @Column(name = "base_price", nullable = false)
     private BigDecimal basePrice;
 
-    // TODO [MEMBER-2]: Add ManyToOne relationship to Movie
-    // TODO [MEMBER-2]: Add ManyToOne relationship to Auditorium
-    // TODO [MEMBER-2]: Add status field (ACTIVE, CANCELLED, ENDED)
+    @Column(length = 20)
+    private String status = "ACTIVE"; // ACTIVE, CANCELLED, ENDED
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "movie_id", nullable = false)
+    private Movie movie;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "auditorium_id", nullable = false)
+    private Auditorium auditorium;
 
     public Showtime() {
+    }
+
+    public Showtime(LocalDateTime startTime, LocalDateTime endTime, BigDecimal basePrice, Movie movie, Auditorium auditorium) {
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.basePrice = basePrice;
+        this.movie = movie;
+        this.auditorium = auditorium;
+        this.status = "ACTIVE";
     }
 
     public Long getId() {
@@ -58,5 +74,29 @@ public class Showtime {
 
     public void setBasePrice(BigDecimal basePrice) {
         this.basePrice = basePrice;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Movie getMovie() {
+        return movie;
+    }
+
+    public void setMovie(Movie movie) {
+        this.movie = movie;
+    }
+
+    public Auditorium getAuditorium() {
+        return auditorium;
+    }
+
+    public void setAuditorium(Auditorium auditorium) {
+        this.auditorium = auditorium;
     }
 }

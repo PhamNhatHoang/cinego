@@ -1,6 +1,9 @@
 package com.cinego.backend.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -25,11 +28,31 @@ public class User {
     @Column(name = "phone_number", length = 15)
     private String phoneNumber;
 
-    // TODO [MEMBER-1]: Add relationship to Role (ManyToMany with user_roles join table)
-    // TODO [MEMBER-1]: Add status field (ACTIVE, LOCKED)
-    // TODO [MEMBER-1]: Add createdAt, updatedAt timestamps
+    @Column(length = 20)
+    private String status = "ACTIVE";
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
     public User() {
+    }
+
+    public User(String username, String password, String email, String fullName, String phoneNumber) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.fullName = fullName;
+        this.phoneNumber = phoneNumber;
+        this.status = "ACTIVE";
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -78,5 +101,29 @@ public class User {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 }

@@ -5,7 +5,12 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tickets")
+@Table(
+    name = "tickets",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uq_showtime_seat", columnNames = {"showtime_id", "seat_id"})
+    }
+)
 public class Ticket {
 
     @Id
@@ -17,17 +22,32 @@ public class Ticket {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private TicketStatus status;
+    private TicketStatus status = TicketStatus.ACTIVE;
 
     @Column(name = "checked_in_at")
     private LocalDateTime checkedInAt;
 
-    // TODO [MEMBER-2]: Add ManyToOne relationship to Booking
-    // TODO [MEMBER-2]: Add ManyToOne relationship to Seat
-    // TODO [MEMBER-2]: Add ManyToOne relationship to Showtime
-    // TODO [SHARED]: Add unique constraint (showtime_id, seat_id) to prevent duplicate tickets
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id", nullable = false)
+    private Booking booking;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seat_id", nullable = false)
+    private Seat seat;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "showtime_id", nullable = false)
+    private Showtime showtime;
 
     public Ticket() {
+    }
+
+    public Ticket(String ticketCode, Booking booking, Seat seat, Showtime showtime) {
+        this.ticketCode = ticketCode;
+        this.booking = booking;
+        this.seat = seat;
+        this.showtime = showtime;
+        this.status = TicketStatus.ACTIVE;
     }
 
     public Long getId() {
@@ -60,5 +80,29 @@ public class Ticket {
 
     public void setCheckedInAt(LocalDateTime checkedInAt) {
         this.checkedInAt = checkedInAt;
+    }
+
+    public Booking getBooking() {
+        return booking;
+    }
+
+    public void setBooking(Booking booking) {
+        this.booking = booking;
+    }
+
+    public Seat getSeat() {
+        return seat;
+    }
+
+    public void setSeat(Seat seat) {
+        this.seat = seat;
+    }
+
+    public Showtime getShowtime() {
+        return showtime;
+    }
+
+    public void setShowtime(Showtime showtime) {
+        this.showtime = showtime;
     }
 }
