@@ -2,12 +2,30 @@
 
 import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { MOCK_MOVIES } from "@/mocks/home-mock-data";
+import { movieApi } from "@/lib/api-services";
+import type { Movie as ApiMovie } from "@/lib/types";
+import type { Movie } from "@/features/home/types/home.types";
 import { MovieCard } from "@/features/movies/components/MovieCard";
 import { Input, Tabs, EmptyState, Loading, Card } from "@/components/ui";
 import { MagnifyingGlass, FilmSlate, Calendar, Funnel } from "@phosphor-icons/react";
 
-// Get list of all unique genres from mock data
+/** Map API Movie → Home Movie type for MovieCard component */
+function toHomeMovie(m: ApiMovie): Movie {
+  return {
+    id: String(m.id),
+    title: m.title,
+    description: m.description || "",
+    posterUrl: m.posterUrl || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=400",
+    backdropUrl: m.trailerUrl || m.posterUrl || "",
+    genre: m.genres || [],
+    duration: m.duration,
+    releaseDate: m.releaseDate || "",
+    ageRating: m.rated || "P",
+    rating: undefined,
+    status: m.status === "UPCOMING" ? "UPCOMING" : "NOW_SHOWING",
+  };
+}
+
 const ALL_GENRES = [
   "Tất cả",
   "Hành động",
@@ -27,115 +45,94 @@ function MoviesListContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Read URL query params
   const queryParam = searchParams.get("q") || "";
   const statusParam = searchParams.get("status") || "now-showing";
   const genreParam = searchParams.get("genre") || "Tất cả";
 
-  // Internal states
   const [searchVal, setSearchVal] = useState(queryParam);
+  const [allMovies, setAllMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sync state with URL parameter changes (e.g. from header search)
+  // Fetch movies from API
+  useEffect(() => {
+    movieApi
+      .getAll()
+      .then((data) => setAllMovies(data.map(toHomeMovie)))
+      .catch(() => setAllMovies([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(() => {
     setSearchVal(queryParam);
   }, [queryParam]);
 
-  // Set up tab options
   const tabOptions = [
     { id: "now-showing", label: "Phim đang chiếu", icon: <FilmSlate size={16} /> },
     { id: "upcoming", label: "Phim sắp chiếu", icon: <Calendar size={16} /> },
   ];
 
-  // Handle updates to URL query parameters
   const updateParams = (updates: { q?: string; status?: string; genre?: string }) => {
     const params = new URLSearchParams(searchParams.toString());
-    
     if (updates.q !== undefined) {
       if (updates.q) params.set("q", updates.q);
       else params.delete("q");
     }
-    
-    if (updates.status !== undefined) {
-      params.set("status", updates.status);
-    }
-    
+    if (updates.status !== undefined) params.set("status", updates.status);
     if (updates.genre !== undefined) {
       if (updates.genre !== "Tất cả") params.set("genre", updates.genre);
       else params.delete("genre");
     }
-
     router.push(`/movies?${params.toString()}`);
   };
 
-  // Perform search submission
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateParams({ q: searchVal.trim() });
   };
 
-  // Handle Tab Switch
-  const handleTabChange = (tabId: string) => {
-    updateParams({ status: tabId });
-  };
+  const handleTabChange = (tabId: string) => updateParams({ status: tabId });
+  const handleGenreClick = (genre: string) => updateParams({ genre });
 
-  // Handle Genre Tag click
-  const handleGenreClick = (genre: string) => {
-    updateParams({ genre });
-  };
-
-  // Filter movies based on status, search string, and genre
   const filteredMovies = useMemo(() => {
-    return MOCK_MOVIES.filter((movie) => {
-      // 1. Filter by Status
+    return allMovies.filter((movie) => {
       const matchStatus =
         statusParam === "now-showing"
           ? movie.status === "NOW_SHOWING"
           : movie.status === "UPCOMING";
-
-      // 2. Filter by Search Query
       const matchQuery =
         !queryParam ||
         movie.title.toLowerCase().includes(queryParam.toLowerCase()) ||
         movie.description.toLowerCase().includes(queryParam.toLowerCase());
-
-      // 3. Filter by Genre
       const matchGenre =
         genreParam === "Tất cả" || movie.genre.includes(genreParam);
-
       return matchStatus && matchQuery && matchGenre;
     });
-  }, [statusParam, queryParam, genreParam]);
+  }, [allMovies, statusParam, queryParam, genreParam]);
 
-  // Clear all filters
   const handleClearFilters = () => {
     setSearchVal("");
     router.push("/movies");
   };
 
+  if (loading) {
+    return (
+      <main className="max-w-[1200px] mx-auto px-6 py-24 min-h-[calc(100vh-16rem)]">
+        <div className="flex justify-center py-20"><Loading size="lg" /></div>
+      </main>
+    );
+  }
+
   return (
     <main className="max-w-[1200px] mx-auto px-6 py-24 space-y-8 min-h-[calc(100vh-16rem)]">
-      
-      {/* Title & Description */}
       <div className="space-y-2 border-b border-border/60 pb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-          Danh Sách Phim
-        </h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Danh Sách Phim</h1>
         <p className="text-xs text-muted-foreground">
           Khám phá những tựa phim bom tấn đỉnh cao đang chiếu hoặc sắp khởi chiếu tại rạp.
         </p>
       </div>
 
-      {/* Filters & Search controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Left Side: Status Tabs */}
-        <Tabs
-          options={tabOptions}
-          activeTabId={statusParam}
-          onTabChange={handleTabChange}
-          variant="pills"
-        />
-
-        {/* Right Side: Search Input */}
+        <Tabs options={tabOptions} activeTabId={statusParam} onTabChange={handleTabChange} variant="pills" />
         <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
           <Input
             placeholder="Tìm kiếm phim..."
@@ -147,10 +144,7 @@ function MoviesListContent() {
           {searchVal && (
             <button
               type="button"
-              onClick={() => {
-                setSearchVal("");
-                updateParams({ q: "" });
-              }}
+              onClick={() => { setSearchVal(""); updateParams({ q: "" }); }}
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground font-bold font-mono transition-colors"
             >
               Clear
@@ -159,7 +153,6 @@ function MoviesListContent() {
         </form>
       </div>
 
-      {/* Genre Filter List */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
           <Funnel size={14} className="text-primary" />
@@ -185,7 +178,6 @@ function MoviesListContent() {
         </div>
       </div>
 
-      {/* Active filters summary */}
       {(queryParam || genreParam !== "Tất cả") && (
         <div className="flex items-center justify-between p-3.5 bg-muted/40 border border-border rounded-2xl text-xs text-muted-foreground">
           <div className="flex flex-wrap items-center gap-2">
@@ -201,16 +193,12 @@ function MoviesListContent() {
               </span>
             )}
           </div>
-          <button
-            onClick={handleClearFilters}
-            className="text-primary hover:underline font-bold"
-          >
+          <button onClick={handleClearFilters} className="text-primary hover:underline font-bold">
             Xóa bộ lọc
           </button>
         </div>
       )}
 
-      {/* Movies Grid */}
       {filteredMovies.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pt-4">
           {filteredMovies.map((movie) => (
@@ -227,7 +215,6 @@ function MoviesListContent() {
           />
         </Card>
       )}
-
     </main>
   );
 }

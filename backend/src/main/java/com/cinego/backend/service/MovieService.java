@@ -2,35 +2,122 @@ package com.cinego.backend.service;
 
 import com.cinego.backend.dto.request.MovieRequest;
 import com.cinego.backend.dto.response.MovieResponse;
+import com.cinego.backend.model.Genre;
+import com.cinego.backend.model.Movie;
+import com.cinego.backend.model.enums.MovieStatus;
+import com.cinego.backend.repository.GenreRepository;
+import com.cinego.backend.repository.MovieRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MovieService {
 
-    // TODO [MEMBER-1]: Inject MovieRepository, GenreRepository
+    @Autowired
+    private MovieRepository movieRepository;
+
+    @Autowired
+    private GenreRepository genreRepository;
 
     public List<MovieResponse> getAllMovies(String status, String search) {
-        // TODO [MEMBER-1]: Retrieve and filter movies (e.g. by status, title match)
-        return null;
+        List<Movie> movies = movieRepository.findAll();
+
+        // Filter by status
+        if (status != null && !status.isBlank()) {
+            try {
+                MovieStatus ms = MovieStatus.valueOf(status.toUpperCase());
+                movies = movies.stream()
+                        .filter(m -> m.getStatus() == ms)
+                        .collect(Collectors.toList());
+            } catch (IllegalArgumentException ignored) {
+                // Invalid status string → skip filter
+            }
+        }
+
+        // Filter by title search
+        if (search != null && !search.isBlank()) {
+            String lower = search.toLowerCase();
+            movies = movies.stream()
+                    .filter(m -> m.getTitle().toLowerCase().contains(lower))
+                    .collect(Collectors.toList());
+        }
+
+        return movies.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     public MovieResponse getMovieById(Long id) {
-        // TODO [MEMBER-1]: Retrieve movie by ID, map to MovieResponse
-        return null;
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Movie not found with id: " + id));
+        return toResponse(movie);
     }
 
     public MovieResponse createMovie(MovieRequest request) {
-        // TODO [MEMBER-1]: Create a new Movie entity, associate Genres, and save
-        return null;
+        Movie movie = new Movie();
+        mapRequestToEntity(request, movie);
+        Movie saved = movieRepository.save(movie);
+        return toResponse(saved);
     }
 
     public MovieResponse updateMovie(Long id, MovieRequest request) {
-        // TODO [MEMBER-1]: Update movie details and genres
-        return null;
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Movie not found with id: " + id));
+        mapRequestToEntity(request, movie);
+        Movie saved = movieRepository.save(movie);
+        return toResponse(saved);
     }
 
     public void deleteMovie(Long id) {
-        // TODO [MEMBER-1]: Delete movie by ID
+        if (!movieRepository.existsById(id)) {
+            throw new RuntimeException("Movie not found with id: " + id);
+        }
+        movieRepository.deleteById(id);
+    }
+
+    // ── Mapping helpers ──
+
+    private void mapRequestToEntity(MovieRequest request, Movie movie) {
+        movie.setTitle(request.getTitle());
+        movie.setDescription(request.getDescription());
+        movie.setDuration(request.getDuration());
+
+        if (request.getStatus() != null) {
+            try {
+                movie.setStatus(MovieStatus.valueOf(request.getStatus().toUpperCase()));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        if (request.getGenreIds() != null && !request.getGenreIds().isEmpty()) {
+            List<Genre> genres = genreRepository.findAllById(request.getGenreIds());
+            movie.setGenres(new HashSet<>(genres));
+        }
+    }
+
+    private MovieResponse toResponse(Movie movie) {
+        MovieResponse r = new MovieResponse();
+        r.setId(movie.getId());
+        r.setTitle(movie.getTitle());
+        r.setDescription(movie.getDescription());
+        r.setDuration(movie.getDuration());
+        r.setStatus(movie.getStatus() != null ? movie.getStatus().name() : null);
+        r.setPosterUrl(movie.getPosterUrl());
+        r.setTrailerUrl(movie.getTrailerUrl());
+        r.setRated(movie.getRated());
+        r.setReleaseDate(movie.getReleaseDate());
+        r.setDirector(movie.getDirector());
+        r.setCast(movie.getCast());
+        r.setLanguage(movie.getLanguage());
+
+        if (movie.getGenres() != null) {
+            r.setGenres(movie.getGenres().stream()
+                    .map(Genre::getName)
+                    .collect(Collectors.toList()));
+        }
+
+        return r;
     }
 }

@@ -1,42 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { MOCK_MOVIES, MOCK_SHOWTIMES } from "@/mocks/home-mock-data";
+import { movieApi, showtimeApi } from "@/lib/api-services";
+import type { Movie as ApiMovie, Showtime as ApiShowtime } from "@/lib/types";
 import { Calendar, Clock, ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
 
+interface MovieWithShowtimes {
+  id: string;
+  title: string;
+  posterUrl: string;
+  ageRating: string;
+  genres: string;
+  slots: { id: string; time: string }[];
+}
+
 export default function FeaturedShowtimes() {
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState<string>("2026-07-16");
 
-  const datesList = [
-    { value: "2026-07-16", label: "T5", day: "16", month: "Th 7" },
-    { value: "2026-07-17", label: "T6", day: "17", month: "Th 7" },
-    { value: "2026-07-18", label: "T7", day: "18", month: "Th 7" },
-  ];
-
-  // Lọc các phim có lịch chiếu trong ngày được chọn
-  const activeMovies = MOCK_MOVIES.filter(movie => {
-    if (movie.status !== "NOW_SHOWING") return false;
-    const hasShowtimes = MOCK_SHOWTIMES.some(s => s.movieId === movie.id && s.date === selectedDate);
-    // Để trang chủ không bị trống dữ liệu mock, ta cho phép các phim có suất chiếu mẫu
-    return movie.id === "m-1" || movie.id === "m-2" || movie.id === "m-3" || hasShowtimes;
-  });
-
-  const getShowtimesForMovie = (movieId: string) => {
-    const showtimes = MOCK_SHOWTIMES.filter(s => s.movieId === movieId && s.date === selectedDate);
-    if (showtimes.length === 0) {
-      // Sinh suất chiếu mẫu nếu ngày đó chưa được định nghĩa
-      return [
-        { id: `s-f-1`, time: "11:30" },
-        { id: `s-f-2`, time: "14:45" },
-        { id: `s-f-3`, time: "17:15" },
-        { id: `s-f-4`, time: "20:00" },
-      ];
+  // Generate 3 dates from today
+  const generateDates = () => {
+    const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+    const result = [];
+    for (let i = 0; i < 3; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      result.push({
+        value: d.toISOString().split("T")[0],
+        label: weekdays[d.getDay()],
+        day: String(d.getDate()).padStart(2, "0"),
+        month: `Th ${d.getMonth() + 1}`,
+      });
     }
-    return showtimes;
+    return result;
   };
+
+  const datesList = generateDates();
+  const [selectedDate, setSelectedDate] = useState<string>(datesList[0]?.value || "");
+  const [moviesData, setMoviesData] = useState<MovieWithShowtimes[]>([]);
+
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    Promise.all([
+      movieApi.getAll({ status: "NOW_SHOWING" }),
+      showtimeApi.search({ date: selectedDate }),
+    ])
+      .then(([movies, showtimes]) => {
+        // Group showtimes by movieId
+        const showtimesByMovie: Record<number, ApiShowtime[]> = {};
+        showtimes.forEach((s) => {
+          if (!showtimesByMovie[s.movieId]) showtimesByMovie[s.movieId] = [];
+          showtimesByMovie[s.movieId].push(s);
+        });
+
+        // Build data for movies that have showtimes
+        const result: MovieWithShowtimes[] = movies
+          .filter((m) => showtimesByMovie[m.id])
+          .map((m) => ({
+            id: String(m.id),
+            title: m.title,
+            posterUrl: m.posterUrl || "",
+            ageRating: m.rated || "P",
+            genres: (m.genres || []).join(", "),
+            slots: (showtimesByMovie[m.id] || [])
+              .sort((a, b) => a.startTime.localeCompare(b.startTime))
+              .map((s) => ({
+                id: String(s.id),
+                time: new Date(s.startTime).toLocaleTimeString("vi-VN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              })),
+          }));
+
+        setMoviesData(result);
+      })
+      .catch(() => setMoviesData([]));
+  }, [selectedDate]);
 
   return (
     <section className="max-w-[1200px] mx-auto px-6 py-16 md:py-24 space-y-8">
@@ -74,9 +116,8 @@ export default function FeaturedShowtimes() {
 
       {/* Movies Showtimes List */}
       <div className="space-y-6">
-        {activeMovies.map((movie) => {
-          const slots = getShowtimesForMovie(movie.id);
-          return (
+        {moviesData.length > 0 ? (
+          moviesData.map((movie) => (
             <div 
               key={movie.id}
               className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6 rounded-2xl border border-border bg-card shadow-soft"
@@ -95,13 +136,13 @@ export default function FeaturedShowtimes() {
                   <h3 className="font-bold text-base hover:text-primary transition-colors line-clamp-2">
                     {movie.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground font-medium">{movie.genre.join(", ")}</p>
+                  <p className="text-xs text-muted-foreground font-medium">{movie.genres}</p>
                 </div>
               </div>
 
               {/* Right Column: Time Slots */}
               <div className="md:col-span-8 flex flex-wrap gap-3 items-center">
-                {slots.map((slot, index) => (
+                {movie.slots.map((slot, index) => (
                   <button
                     key={index}
                     onClick={() => router.push(`/booking/${slot.id}`)}
@@ -113,8 +154,12 @@ export default function FeaturedShowtimes() {
                 ))}
               </div>
             </div>
-          );
-        })}
+          ))
+        ) : (
+          <div className="text-center py-12 text-muted-foreground text-sm">
+            Chưa có suất chiếu nào trong ngày này.
+          </div>
+        )}
       </div>
 
       {/* View All Button */}

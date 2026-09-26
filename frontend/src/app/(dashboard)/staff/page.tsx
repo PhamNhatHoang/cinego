@@ -11,20 +11,20 @@ import {
   ListChecks, 
   MonitorPlay 
 } from "@phosphor-icons/react";
-import { Card, Button } from "@/components/ui";
+import { Card, Button, Loading } from "@/components/ui";
+import { dashboardApi } from "@/lib/api-services";
 
 export default function StaffPage() {
-  const [checkedInCount, setCheckedInCount] = useState(14);
-  const [totalToday, setTotalToday] = useState(128);
+  const [checkedInCount, setCheckedInCount] = useState(0);
+  const [totalToday, setTotalToday] = useState(0);
 
-  // Load bookings list count from local storage to keep it dynamic!
   useEffect(() => {
-    const saved = localStorage.getItem("cinego_bookings");
-    if (saved) {
-      const bookings = JSON.parse(saved);
-      // Let's add mock count to bookings length
-      setTotalToday(128 + bookings.length);
-    }
+    dashboardApi.getStats()
+      .then((stats) => {
+        setTotalToday(stats.totalTicketsSold || 0);
+        setCheckedInCount(stats.checkedInToday || 0);
+      })
+      .catch(() => {});
   }, []);
 
   const stats = [

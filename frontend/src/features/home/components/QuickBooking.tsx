@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Movie, Cinema, Showtime } from "../types/home.types";
-import { MOCK_MOVIES, MOCK_CINEMAS, MOCK_SHOWTIMES } from "@/mocks/home-mock-data";
+import { Movie, Cinema } from "../types/home.types";
+import { movieApi, cinemaApi, showtimeApi } from "@/lib/api-services";
+import type { Showtime as ApiShowtime } from "@/lib/types";
 import { MagnifyingGlass, Calendar, Compass, FilmSlate, Ticket } from "@phosphor-icons/react";
 
 export default function QuickBooking() {
   const router = useRouter();
   
   // States
-  const [movies] = useState<Movie[]>(MOCK_MOVIES.filter(m => m.status === "NOW_SHOWING"));
-  const [cinemas] = useState<Cinema[]>(MOCK_CINEMAS);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [dates, setDates] = useState<string[]>([]);
-  const [showtimes, setShowtimes] = useState<Showtime[]>([]);
+  const [showtimes, setShowtimes] = useState<{ id: string; time: string }[]>([]);
 
   // Selected values
   const [selectedMovie, setSelectedMovie] = useState<string>("");
@@ -21,37 +22,68 @@ export default function QuickBooking() {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedShowtime, setSelectedShowtime] = useState<string>("");
 
-  // Tạo danh sách 3 ngày từ ngày hôm nay (giả lập 16/07/2026)
+  // Fetch movies and cinemas from API
   useEffect(() => {
-    setDates(["2026-07-16", "2026-07-17", "2026-07-18"]);
+    movieApi.getAll({ status: "NOW_SHOWING" }).then((data) => {
+      setMovies(data.map((m) => ({
+        id: String(m.id),
+        title: m.title,
+        description: m.description || "",
+        posterUrl: m.posterUrl || "",
+        backdropUrl: m.trailerUrl || m.posterUrl || "",
+        genre: m.genres || [],
+        duration: m.duration,
+        releaseDate: m.releaseDate || "",
+        ageRating: m.rated || "P",
+        status: "NOW_SHOWING" as const,
+      })));
+    }).catch(() => setMovies([]));
+
+    cinemaApi.getAll().then((data) => {
+      setCinemas(data.map((c) => ({
+        id: String(c.id),
+        name: c.name,
+        address: c.address,
+      })));
+    }).catch(() => setCinemas([]));
   }, []);
 
-  // Lọc suất chiếu khi thay đổi Phim, Rạp, Ngày
+  // Generate 7 days from today
+  useEffect(() => {
+    const days: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      days.push(d.toISOString().split("T")[0]);
+    }
+    setDates(days);
+  }, []);
+
+  // Fetch showtimes when movie, cinema, date are all selected
   useEffect(() => {
     if (selectedMovie && selectedCinema && selectedDate) {
-      // Trong mock data, ta chỉ cấu hình showtime cho một số ngày hôm nay
-      // Để tránh trống rỗng, ta sẽ lọc hoặc tự sinh suất chiếu ngẫu nhiên
-      const filtered = MOCK_SHOWTIMES.filter(
-        s => s.movieId === selectedMovie && 
-             s.cinemaId === selectedCinema && 
-             s.date === selectedDate
-      );
-      
-      // Nếu không có trong mock data, ta tự sinh vài suất chiếu mẫu để người dùng dễ thử nghiệm
-      if (filtered.length === 0) {
-        setShowtimes([
-          { id: `s-gen-1`, movieId: selectedMovie, cinemaId: selectedCinema, date: selectedDate, time: "12:00" },
-          { id: `s-gen-2`, movieId: selectedMovie, cinemaId: selectedCinema, date: selectedDate, time: "15:30" },
-          { id: `s-gen-3`, movieId: selectedMovie, cinemaId: selectedCinema, date: selectedDate, time: "18:45" },
-          { id: `s-gen-4`, movieId: selectedMovie, cinemaId: selectedCinema, date: selectedDate, time: "21:15" },
-        ]);
-      } else {
-        setShowtimes(filtered);
-      }
+      showtimeApi
+        .search({
+          movieId: Number(selectedMovie),
+          cinemaId: Number(selectedCinema),
+          date: selectedDate,
+        })
+        .then((data) => {
+          setShowtimes(
+            data.map((s) => ({
+              id: String(s.id),
+              time: new Date(s.startTime).toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            }))
+          );
+        })
+        .catch(() => setShowtimes([]));
     } else {
       setShowtimes([]);
     }
-    setSelectedShowtime(""); // Reset suất chiếu khi thay đổi bộ lọc khác
+    setSelectedShowtime("");
   }, [selectedMovie, selectedCinema, selectedDate]);
 
   const handleBook = () => {
@@ -61,10 +93,14 @@ export default function QuickBooking() {
   };
 
   const formatDateLabel = (dateStr: string) => {
-    if (dateStr === "2026-07-16") return "Hôm nay (16/07)";
-    if (dateStr === "2026-07-17") return "Ngày mai (17/07)";
-    if (dateStr === "2026-07-18") return "Ngày kia (18/07)";
-    return dateStr;
+    const today = new Date();
+    const d = new Date(dateStr + "T00:00:00");
+    const diff = Math.round((d.getTime() - new Date(today.toISOString().split("T")[0] + "T00:00:00").getTime()) / 86400000);
+    const dayMonth = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    if (diff === 0) return `Hôm nay (${dayMonth})`;
+    if (diff === 1) return `Ngày mai (${dayMonth})`;
+    const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+    return `${weekdays[d.getDay()]} (${dayMonth})`;
   };
 
   return (

@@ -1,29 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MOCK_CINEMAS } from "@/mocks/home-mock-data";
-import { Card, Button, Input, EmptyState } from "@/components/ui";
+import { cinemaApi } from "@/lib/api-services";
+import type { Cinema } from "@/lib/types";
+import { Card, Button, Input, EmptyState, Loading } from "@/components/ui";
 import { MapPin, Phone, Compass, MagnifyingGlass, Clock } from "@phosphor-icons/react";
+
+// Stock images for cinema visuals
+const CINEMA_IMAGES = [
+  "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=600",
+  "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&q=80&w=600",
+  "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=600",
+  "https://images.unsplash.com/photo-1478720143022-385f704d3b79?auto=format&fit=crop&q=80&w=600",
+];
 
 export default function CinemasPage() {
   const [searchVal, setSearchVal] = useState("");
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    cinemaApi
+      .getAll()
+      .then(setCinemas)
+      .catch(() => setCinemas([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   // Filter cinemas by name or address
-  const filteredCinemas = MOCK_CINEMAS.filter(
+  const filteredCinemas = cinemas.filter(
     (c) =>
       c.name.toLowerCase().includes(searchVal.toLowerCase()) ||
       c.address.toLowerCase().includes(searchVal.toLowerCase())
   );
-
-  // Mock images for theaters to give high-end cinematic visuals
-  const cinemaImages: { [key: string]: string } = {
-    "c-1": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=600",
-    "c-2": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&q=80&w=600",
-    "c-3": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=600",
-    "c-4": "https://images.unsplash.com/photo-1478720143022-385f704d3b79?auto=format&fit=crop&q=80&w=600",
-  };
 
   return (
     <main className="max-w-[1200px] mx-auto px-6 py-24 space-y-8 min-h-[calc(100vh-16rem)]">
@@ -49,12 +60,12 @@ export default function CinemasPage() {
       </div>
 
       {/* Cinema Cards Grid */}
-      {filteredCinemas.length > 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-20"><Loading size="lg" /></div>
+      ) : filteredCinemas.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filteredCinemas.map((cinema) => {
-            const imgUrl =
-              cinemaImages[cinema.id] ||
-              "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=600";
+          {filteredCinemas.map((cinema, index) => {
+            const imgUrl = CINEMA_IMAGES[index % CINEMA_IMAGES.length];
 
             return (
               <Card
@@ -88,7 +99,7 @@ export default function CinemasPage() {
                       </p>
                       <p className="flex items-center gap-1.5">
                         <Phone size={14} className="text-primary" />
-                        <span className="font-mono">1900 6006 (Rạp {cinema.id.replace("c-", "")})</span>
+                        <span className="font-mono">{cinema.hotline || `1900 6006`}</span>
                       </p>
                       <p className="flex items-center gap-1.5">
                         <Clock size={14} className="text-primary" />

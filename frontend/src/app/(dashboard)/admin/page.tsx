@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   CurrencyDollar, 
@@ -10,7 +10,9 @@ import {
   Clock, 
   MapPin 
 } from "@phosphor-icons/react";
-import { Card, Button, DataTable } from "@/components/ui";
+import { Card, Button, Loading } from "@/components/ui";
+import { dashboardApi, bookingApi } from "@/lib/api-services";
+import type { DashboardStats, Booking } from "@/lib/types";
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -22,82 +24,64 @@ import {
   Bar 
 } from "recharts";
 
-// Mock revenue data over 7 days
-const REVENUE_DATA = [
-  { day: "Th 2", revenue: 5400000 },
-  { day: "Th 3", revenue: 6800000 },
-  { day: "Th 4", revenue: 4900000 },
-  { day: "Th 5", revenue: 7200000 },
-  { day: "Th 6", revenue: 9500000 },
-  { day: "Th 7", revenue: 14200000 },
-  { day: "CN", revenue: 18500000 }
-];
-
-// Mock tickets by cinema
-const CINEMA_SALES_DATA = [
-  { name: "Hùng Vương", sales: 420 },
-  { name: "Landmark 81", sales: 380 },
-  { name: "Tây Sơn", sales: 240 },
-  { name: "Vincom ĐN", sales: 180 }
-];
-
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
-  const [dbBookings, setDbBookings] = useState<any[]>([]);
+  const [dashData, setDashData] = useState<DashboardStats | null>(null);
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Prevent SSR hydration mismatch for Recharts
   useEffect(() => {
     setMounted(true);
 
-    const saved = localStorage.getItem("cinego_bookings");
-    if (saved) {
-      setDbBookings(JSON.parse(saved));
-    }
+    Promise.all([
+      dashboardApi.getStats(),
+      bookingApi.getAll(),
+    ])
+      .then(([stats, bookings]) => {
+        setDashData(stats);
+        setRecentBookings(bookings.slice(0, 4));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  // Compute live statistics based on localStorage bookings
-  const liveStats = useMemo(() => {
-    const totalBookedRevenue = dbBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
-    const totalBookedTicketsCount = dbBookings.reduce((sum, b) => sum + (b.seats ? b.seats.split(",").length : 0), 0);
-
-    return {
-      totalRevenue: 66500000 + totalBookedRevenue,
-      totalTickets: 1240 + totalBookedTicketsCount
-    };
-  }, [dbBookings]);
+  if (loading || !dashData) {
+    return (
+      <div className="flex justify-center py-20"><Loading size="lg" /></div>
+    );
+  }
 
   const stats = [
     {
       label: "Doanh thu (Tháng)",
-      value: `${liveStats.totalRevenue.toLocaleString("vi-VN")} đ`,
-      trend: "+14.8% so với tháng trước",
+      value: `${(dashData.totalRevenue || 0).toLocaleString("vi-VN")} đ`,
+      trend: `${dashData.revenueGrowthPercent ? `+${dashData.revenueGrowthPercent.toFixed(1)}%` : "N/A"} so với tháng trước`,
       icon: <CurrencyDollar size={22} weight="duotone" className="text-green-500" />
     },
     {
       label: "Vé đã bán",
-      value: `${liveStats.totalTickets} vé`,
-      trend: "Tỷ lệ lấp đầy: 72.4%",
+      value: `${dashData.totalTicketsSold || 0} vé`,
+      trend: `Tỷ lệ lấp đầy: ${dashData.occupancyRate ? dashData.occupancyRate.toFixed(1) : "0"}%`,
       icon: <Ticket size={22} weight="duotone" className="text-primary" />
     },
     {
       label: "Phim hoạt động",
-      value: "6 phim",
-      trend: "2 phim sắp chiếu",
+      value: `${dashData.activeMovies || 0} phim`,
+      trend: `${dashData.upcomingMovies || 0} phim sắp chiếu`,
       icon: <FilmSlate size={22} weight="duotone" className="text-indigo-500" />
     }
   ];
+
+  const weeklyRevenue = dashData.weeklyRevenue || [];
+  const cinemaSales = dashData.cinemaSales || [];
 
   return (
     <div className="space-y-8">
       {/* Title block */}
       <div className="flex justify-between items-center border-b border-border/60 pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Tổng quan Hệ Thống
-          </h1>
-          <p className="text-xs text-muted-foreground">
-            Thống kê doanh số, vé bán và tình hình vận hành các rạp thời gian thực
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Tổng quan Hệ Thống</h1>
+          <p className="text-xs text-muted-foreground">Thống kê doanh số, vé bán và tình hình vận hành các rạp thời gian thực</p>
         </div>
       </div>
 
@@ -107,9 +91,7 @@ export default function AdminDashboardPage() {
           <Card key={idx} variant="flat" className="p-6 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground uppercase font-mono">{stat.label}</span>
-              <div className="w-10 h-10 rounded-xl bg-muted/40 border border-border flex items-center justify-center">
-                {stat.icon}
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-muted/40 border border-border flex items-center justify-center">{stat.icon}</div>
             </div>
             <div>
               <h3 className="text-2xl font-black tracking-tight text-foreground">{stat.value}</h3>
@@ -122,19 +104,16 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Visual Chart Analysis (Only on mount to avoid SSR errors) */}
+      {/* Charts */}
       {mounted && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Area chart: Revenue trend */}
           <Card variant="flat" className="p-6 space-y-4">
             <div className="border-b border-border/60 pb-3">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-foreground">
-                Doanh thu tuần này (VND)
-              </h4>
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-foreground">Doanh thu tuần này (VND)</h4>
             </div>
             <div className="h-64 w-full text-xs">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={REVENUE_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={weeklyRevenue} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/>
@@ -153,16 +132,13 @@ export default function AdminDashboardPage() {
             </div>
           </Card>
 
-          {/* Bar chart: Cinema ticket sales */}
           <Card variant="flat" className="p-6 space-y-4">
             <div className="border-b border-border/60 pb-3">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-foreground">
-                Lượng vé theo Rạp (Tuần này)
-              </h4>
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-foreground">Lượng vé theo Rạp (Tuần này)</h4>
             </div>
             <div className="h-64 w-full text-xs">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={CINEMA_SALES_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <BarChart data={cinemaSales} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <XAxis dataKey="name" stroke="currentColor" className="opacity-50" />
                   <YAxis stroke="currentColor" className="opacity-50" />
                   <Tooltip
@@ -177,31 +153,27 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Live Recent Activities Log */}
+      {/* Recent Transactions */}
       <Card variant="double-bezel" className="p-0 border-none" innerClassName="p-6 md:p-8 space-y-4">
         <div className="flex justify-between items-center border-b border-border/60 pb-4">
-          <h2 className="text-sm font-extrabold text-foreground uppercase tracking-wider">
-            Giao dịch vé gần đây
-          </h2>
-          <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded font-extrabold tracking-widest uppercase">
-            Live updates
-          </span>
+          <h2 className="text-sm font-extrabold text-foreground uppercase tracking-wider">Giao dịch vé gần đây</h2>
+          <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded font-extrabold tracking-widest uppercase">Live updates</span>
         </div>
 
         <div className="space-y-4 divide-y divide-border/60">
-          {dbBookings.length > 0 ? (
-            dbBookings.slice(0, 4).map((b, idx) => (
+          {recentBookings.length > 0 ? (
+            recentBookings.map((b) => (
               <div key={b.id} className="flex justify-between items-center pt-4 first:pt-0">
                 <div className="space-y-1">
-                  <div className="text-xs font-bold text-foreground">Giao dịch #{b.id}</div>
+                  <div className="text-xs font-bold text-foreground">Đơn #{b.bookingCode}</div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Khách đặt: <span className="text-foreground font-semibold">Pham Nhat Hoang</span>
+                    Phim <span className="text-foreground font-bold">{b.movieTitle}</span>
                     {" • "}
-                    Mua vé phim <span className="text-foreground font-bold">{b.movieTitle}</span> ({b.seats})
+                    Ghế: <span className="font-mono text-primary font-bold">{(b.seatNames || []).join(", ")}</span>
                   </p>
                 </div>
                 <div className="text-xs font-mono font-extrabold text-primary shrink-0 pl-4">
-                  +{b.totalPrice.toLocaleString("vi-VN")} đ
+                  +{Number(b.totalAmount).toLocaleString("vi-VN")} đ
                 </div>
               </div>
             ))

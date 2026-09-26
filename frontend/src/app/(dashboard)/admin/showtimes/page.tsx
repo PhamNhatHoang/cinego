@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, Plus, Pencil, Trash, Clock } from "@phosphor-icons/react";
-import { MOCK_SHOWTIMES, MOCK_MOVIES, MOCK_CINEMAS } from "@/mocks/home-mock-data";
-import { Showtime } from "@/features/home/types/home.types";
+import { showtimeApi, movieApi, cinemaApi } from "@/lib/api-services";
+import type { Showtime as ApiShowtime, Movie as ApiMovie, Cinema as ApiCinema } from "@/lib/types";
 import { 
   DataTable, 
   Button, 
@@ -11,95 +11,131 @@ import {
   FormField, 
   Input, 
   Select, 
-  ConfirmDialog 
+  ConfirmDialog,
+  Loading 
 } from "@/components/ui";
 
-interface ShowtimeRecord extends Showtime {
+interface ShowtimeRow {
+  id: number;
+  movieId: number;
+  cinemaId: number;
   movieTitle: string;
   cinemaName: string;
+  date: string;
+  time: string;
+  startTime: string;
 }
 
 export default function AdminShowtimesPage() {
-  const [showtimes, setShowtimes] = useState<ShowtimeRecord[]>(() => {
-    return MOCK_SHOWTIMES.map((s) => {
-      const movie = MOCK_MOVIES.find((m) => m.id === s.movieId);
-      const cinema = MOCK_CINEMAS.find((c) => c.id === s.cinemaId);
-      return {
-        ...s,
-        movieTitle: movie ? movie.title : "Phim chưa xác định",
-        cinemaName: cinema ? cinema.name : "Rạp chưa xác định",
-      };
-    });
-  });
+  const [showtimes, setShowtimes] = useState<ShowtimeRow[]>([]);
+  const [movies, setMovies] = useState<ApiMovie[]>([]);
+  const [cinemas, setCinemas] = useState<ApiCinema[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [selectedShowtime, setSelectedShowtime] = useState<ShowtimeRecord | null>(null);
+  const [selectedShowtime, setSelectedShowtime] = useState<ShowtimeRow | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [showtimeToDelete, setShowtimeToDelete] = useState<string | null>(null);
+  const [showtimeToDelete, setShowtimeToDelete] = useState<number | null>(null);
 
-  // Form Fields State
-  const [movieId, setMovieId] = useState("m-1");
-  const [cinemaId, setCinemaId] = useState("c-1");
-  const [date, setDate] = useState("2026-07-16");
+  // Form Fields
+  const [movieId, setMovieId] = useState("");
+  const [cinemaId, setCinemaId] = useState("");
+  const [date, setDate] = useState("");
   const [time, setTime] = useState("19:00");
 
-  const handleOpenForm = (showtime: ShowtimeRecord | null = null) => {
+  // Fetch data
+  useEffect(() => {
+    Promise.all([
+      showtimeApi.search({}),
+      movieApi.getAll(),
+      cinemaApi.getAll(),
+    ])
+      .then(([stData, mvData, cnData]) => {
+        setMovies(mvData);
+        setCinemas(cnData);
+        setShowtimes(stData.map((s) => ({
+          id: s.id,
+          movieId: s.movieId,
+          cinemaId: s.cinemaId,
+          movieTitle: s.movieTitle,
+          cinemaName: s.cinemaName,
+          date: new Date(s.startTime).toLocaleDateString("vi-VN"),
+          time: new Date(s.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+          startTime: s.startTime,
+        })));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleOpenForm = (showtime: ShowtimeRow | null = null) => {
     if (showtime) {
       setSelectedShowtime(showtime);
-      setMovieId(showtime.movieId);
-      setCinemaId(showtime.cinemaId);
-      setDate(showtime.date);
-      setTime(showtime.time);
+      setMovieId(String(showtime.movieId));
+      setCinemaId(String(showtime.cinemaId));
+      const dt = new Date(showtime.startTime);
+      setDate(dt.toISOString().split("T")[0]);
+      setTime(dt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }));
     } else {
       setSelectedShowtime(null);
-      setMovieId("m-1");
-      setCinemaId("c-1");
-      setDate("2026-07-16");
+      setMovieId(movies[0]?.id ? String(movies[0].id) : "");
+      setCinemaId(cinemas[0]?.id ? String(cinemas[0].id) : "");
+      setDate(new Date().toISOString().split("T")[0]);
       setTime("19:00");
     }
     setIsFormOpen(true);
   };
 
-  const handleSaveShowtime = (e: React.FormEvent) => {
+  const handleSaveShowtime = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const movie = MOCK_MOVIES.find((m) => m.id === movieId);
-    const cinema = MOCK_CINEMAS.find((c) => c.id === cinemaId);
+    const startTime = `${date}T${time}:00`;
 
-    const movieTitle = movie ? movie.title : "Phim chưa xác định";
-    const cinemaName = cinema ? cinema.name : "Rạp chưa xác định";
-
-    if (selectedShowtime) {
-      setShowtimes((prev) =>
-        prev.map((s) =>
-          s.id === selectedShowtime.id
-            ? { ...s, movieId, cinemaId, movieTitle, cinemaName, date, time }
-            : s
-        )
-      );
-    } else {
-      const newShowtime: ShowtimeRecord = {
-        id: `s-${Math.floor(100 + Math.random() * 900)}`,
-        movieId,
-        cinemaId,
-        movieTitle,
-        cinemaName,
-        date,
-        time,
-      };
-      setShowtimes((prev) => [newShowtime, ...prev]);
+    try {
+      if (selectedShowtime) {
+        await showtimeApi.update(selectedShowtime.id, {
+          movieId: Number(movieId),
+          cinemaId: Number(cinemaId),
+          startTime,
+        });
+      } else {
+        await showtimeApi.create({
+          movieId: Number(movieId),
+          cinemaId: Number(cinemaId),
+          startTime,
+        });
+      }
+      // Refresh
+      const updated = await showtimeApi.search({});
+      setShowtimes(updated.map((s) => ({
+        id: s.id,
+        movieId: s.movieId,
+        cinemaId: s.cinemaId,
+        movieTitle: s.movieTitle,
+        cinemaName: s.cinemaName,
+        date: new Date(s.startTime).toLocaleDateString("vi-VN"),
+        time: new Date(s.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+        startTime: s.startTime,
+      })));
+    } catch (err: any) {
+      alert(`Lỗi: ${err.message}`);
     }
     setIsFormOpen(false);
   };
 
-  const handleOpenDelete = (id: string) => {
+  const handleOpenDelete = (id: number) => {
     setShowtimeToDelete(id);
     setIsDeleteOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (showtimeToDelete) {
-      setShowtimes((prev) => prev.filter((s) => s.id !== showtimeToDelete));
+      try {
+        await showtimeApi.delete(showtimeToDelete);
+        setShowtimes((prev) => prev.filter((s) => s.id !== showtimeToDelete));
+      } catch (err: any) {
+        alert(`Lỗi xóa: ${err.message}`);
+      }
     }
     setIsDeleteOpen(false);
   };
@@ -107,7 +143,7 @@ export default function AdminShowtimesPage() {
   const columns = [
     {
       header: "Suất chiếu",
-      render: (row: ShowtimeRecord) => (
+      render: (row: ShowtimeRow) => (
         <div className="flex items-center gap-2">
           <Clock size={16} className="text-primary shrink-0" />
           <span className="font-mono font-bold text-foreground text-sm">{row.time}</span>
@@ -116,37 +152,27 @@ export default function AdminShowtimesPage() {
     },
     {
       header: "Ngày chiếu",
-      accessorKey: "date" as keyof ShowtimeRecord,
+      accessorKey: "date" as keyof ShowtimeRow,
       className: "font-mono text-xs",
     },
     {
       header: "Tên phim",
-      accessorKey: "movieTitle" as keyof ShowtimeRecord,
+      accessorKey: "movieTitle" as keyof ShowtimeRow,
       className: "font-bold text-foreground",
     },
     {
       header: "Rạp chiếu",
-      accessorKey: "cinemaName" as keyof ShowtimeRecord,
+      accessorKey: "cinemaName" as keyof ShowtimeRow,
     },
     {
       header: "Hành động",
       className: "text-right shrink-0",
-      render: (row: ShowtimeRecord) => (
+      render: (row: ShowtimeRow) => (
         <div className="flex items-center justify-end gap-2">
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={() => handleOpenForm(row)}
-            className="w-7 h-7 p-0 flex items-center justify-center rounded-lg"
-          >
+          <Button variant="outline" size="xs" onClick={() => handleOpenForm(row)} className="w-7 h-7 p-0 flex items-center justify-center rounded-lg">
             <Pencil size={13} />
           </Button>
-          <Button
-            variant="danger"
-            size="xs"
-            onClick={() => handleOpenDelete(row.id)}
-            className="w-7 h-7 p-0 flex items-center justify-center rounded-lg"
-          >
+          <Button variant="danger" size="xs" onClick={() => handleOpenDelete(row.id)} className="w-7 h-7 p-0 flex items-center justify-center rounded-lg">
             <Trash size={13} />
           </Button>
         </div>
@@ -154,9 +180,10 @@ export default function AdminShowtimesPage() {
     },
   ];
 
+  if (loading) return <div className="flex justify-center py-20"><Loading size="lg" /></div>;
+
   return (
     <div className="space-y-6">
-      {/* Header block */}
       <div className="flex items-center justify-between border-b border-border/60 pb-6 gap-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
@@ -167,43 +194,26 @@ export default function AdminShowtimesPage() {
             <p className="text-xs text-muted-foreground">Xếp lịch chiếu phim theo khung giờ chiếu và phòng máy chiếu rạp</p>
           </div>
         </div>
-
         <Button variant="primary" size="sm" onClick={() => handleOpenForm(null)} leftIcon={<Plus size={16} />}>
           Thêm Suất Chiếu
         </Button>
       </div>
 
-      {/* Showtimes Table */}
-      <DataTable
-        columns={columns}
-        data={showtimes}
-        searchKey="movieTitle"
-        searchPlaceholder="Tìm kiếm theo tên phim..."
-      />
+      <DataTable columns={columns} data={showtimes} searchKey="movieTitle" searchPlaceholder="Tìm kiếm theo tên phim..." />
 
-      {/* Add/Edit Modal */}
-      <Modal
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        title={selectedShowtime ? "Cập Nhật Lịch Chiếu" : "Xếp Lịch Chiếu Mới"}
-        size="md"
-      >
+      <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={selectedShowtime ? "Cập Nhật Lịch Chiếu" : "Xếp Lịch Chiếu Mới"} size="md">
         <form onSubmit={handleSaveShowtime} className="space-y-4 pt-2">
           <FormField label="Phim chiếu" required>
             <Select value={movieId} onChange={(e) => setMovieId(e.target.value)}>
-              {MOCK_MOVIES.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.title}
-                </option>
+              {movies.map((m) => (
+                <option key={m.id} value={String(m.id)}>{m.title}</option>
               ))}
             </Select>
           </FormField>
           <FormField label="Chi nhánh rạp" required>
             <Select value={cinemaId} onChange={(e) => setCinemaId(e.target.value)}>
-              {MOCK_CINEMAS.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
+              {cinemas.map((c) => (
+                <option key={c.id} value={String(c.id)}>{c.name}</option>
               ))}
             </Select>
           </FormField>
@@ -215,17 +225,12 @@ export default function AdminShowtimesPage() {
           </FormField>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/60">
-            <Button variant="outline" size="sm" onClick={() => setIsFormOpen(false)}>
-              Hủy
-            </Button>
-            <Button type="submit" variant="primary" size="sm">
-              Lưu Lại
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => setIsFormOpen(false)}>Hủy</Button>
+            <Button type="submit" variant="primary" size="sm">Lưu Lại</Button>
           </div>
         </form>
       </Modal>
 
-      {/* Delete confirmation dialog */}
       <ConfirmDialog
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
